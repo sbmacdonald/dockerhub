@@ -1,20 +1,21 @@
 FROM ubuntu:14.04
 
 # Install dev environment
-RUN apt-get update -y
-RUN apt-get install -y git
-RUN apt-get install -y python
-RUN apt-get install -y curl
-RUN apt-get install -y vim
-RUN apt-get install -y strace
-RUN apt-get install -y diffstat
-RUN apt-get install -y pkg-config
-RUN apt-get install -y cmake
-RUN apt-get install -y build-essential
-RUN apt-get install -y tcpdump
-RUN apt-get install -y screen
-RUN apt-get install -y python-pip
-RUN apt-get install -y bash-completion
+RUN apt-get update && apt-get install -y \
+  git \
+  python \
+  curl \
+  vim \
+  strace \
+  diffstat \
+  pkg-config \
+  cmake \
+  build-essential \
+  tcpdump \
+  screen \
+  python-pip \
+  bash-completion \
+  ack-grep
 
 # Install docker client
 RUN apt-get install apt-transport-https 
@@ -43,10 +44,36 @@ RUN apt-get update && apt-get install -y \
   libssl-dev \
   libzmq3-dev \
   libevent-dev \
-  libprotobuf-dev \
-  protobuf-compiler \
   libyaml-cpp-dev \
-  wget
+  wget \
+  autoconf \
+  unzip \
+  libtool
+
+
+RUN mkdir -p /src
+RUN git clone https://github.com/google/protobuf.git /src/protobuf
+WORKDIR /src/protobuf
+RUN git checkout v2.6.1
+RUN ./autogen.sh
+RUN ./configure --prefix=/usr
+RUN make -j16
+RUN make check
+RUN make install
+
+RUN ln -s /usr/lib/libprotobuf-lite.a        /usr/lib/x86_64-linux-gnu/libprotobuf-lite.a
+RUN ln -s /usr/lib/libprotobuf-lite.la       /usr/lib/x86_64-linux-gnu/libprotobuf-lite.la
+RUN ln -s /usr/lib/libprotobuf-lite.so       /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so
+RUN ln -s /usr/lib/libprotobuf-lite.so.9     /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so.9
+RUN ln -s /usr/lib/libprotobuf-lite.so.9.0.1 /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so.9.0.1
+RUN ln -s /usr/lib/libprotobuf.a             /usr/lib/x86_64-linux-gnu/libprotobuf.a
+RUN ln -s /usr/lib/libprotobuf.la            /usr/lib/x86_64-linux-gnu/libprotobuf.la
+RUN ln -s /usr/lib/libprotobuf.so            /usr/lib/x86_64-linux-gnu/libprotobuf.so
+RUN ln -s /usr/lib/libprotobuf.so.9          /usr/lib/x86_64-linux-gnu/libprotobuf.so.9
+
+
+WORKDIR /
+RUN rm -rf /src/protobuf
 
 # Install the julia and the julia protobuf plugin
 RUN apt-get install -y software-properties-common
