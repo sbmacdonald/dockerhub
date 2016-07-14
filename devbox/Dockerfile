@@ -48,29 +48,10 @@ RUN apt-get update && apt-get install -y \
   wget \
   autoconf \
   unzip \
-  libtool
-
-
-RUN mkdir -p /src
-RUN git clone https://github.com/google/protobuf.git /src/protobuf
-WORKDIR /src/protobuf
-RUN git checkout v2.6.1
-RUN ./autogen.sh
-RUN ./configure --prefix=/usr
-RUN make -j16
-RUN make check
-RUN make install
-
-RUN ln -s /usr/lib/libprotobuf-lite.a        /usr/lib/x86_64-linux-gnu/libprotobuf-lite.a
-RUN ln -s /usr/lib/libprotobuf-lite.la       /usr/lib/x86_64-linux-gnu/libprotobuf-lite.la
-RUN ln -s /usr/lib/libprotobuf-lite.so       /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so
-RUN ln -s /usr/lib/libprotobuf-lite.so.9     /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so.9
-RUN ln -s /usr/lib/libprotobuf-lite.so.9.0.1 /usr/lib/x86_64-linux-gnu/libprotobuf-lite.so.9.0.1
-RUN ln -s /usr/lib/libprotobuf.a             /usr/lib/x86_64-linux-gnu/libprotobuf.a
-RUN ln -s /usr/lib/libprotobuf.la            /usr/lib/x86_64-linux-gnu/libprotobuf.la
-RUN ln -s /usr/lib/libprotobuf.so            /usr/lib/x86_64-linux-gnu/libprotobuf.so
-RUN ln -s /usr/lib/libprotobuf.so.9          /usr/lib/x86_64-linux-gnu/libprotobuf.so.9
-
+  libtool \
+  libprotobuf-dev \
+  protobuf-compiler \
+  bindfs
 
 WORKDIR /
 RUN rm -rf /src/protobuf
@@ -84,6 +65,7 @@ RUN julia -e 'Pkg.update(); Pkg.add("ProtoBuf")'
 
 # Setup home environment
 RUN useradd steve
+RUN gpasswd -a steve fuse
 RUN mkdir /home/steve && chown -R steve: /home/steve
 
 # Copy the .julia from /root to /home/steve
@@ -105,7 +87,7 @@ ENV HOME /home/steve
 ADD bashrc /home/steve/.bashrc
 
 # Add the git bash prompt
-RUN git clone https://github.com/magicmonty/bash-git-prompt.git /home/steve/.bash-git-prompt --depth=1
+RUN git clone https://github.com/arialdomartini/oh-my-git.git /home/steve/.oh-my-git
 
 # Add python virtualenvwrapper
 RUN pip install virtualenvwrapper
@@ -130,5 +112,10 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then\n\
 fi\n\
 ' >> /home/steve/.bashrc
 
+RUN echo user_allow_other >> /etc/fuse.conf
+
 RUN chown -R steve: /home/steve
 USER steve
+
+COPY ./docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
