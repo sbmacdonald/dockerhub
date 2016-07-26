@@ -64,12 +64,12 @@ RUN apt-get install -y julia
 RUN julia -e 'Pkg.update(); Pkg.add("ProtoBuf")'
 
 # Setup home environment
-RUN useradd steve
-RUN gpasswd -a steve fuse
-RUN mkdir /home/steve && chown -R steve: /home/steve
+RUN useradd scott
+RUN gpasswd -a scott fuse
+RUN mkdir /home/scott && chown -R scott: /home/scott
 
-# Copy the .julia from /root to /home/steve
-RUN cp -R /root/.julia /home/steve/.julia
+# Copy the .julia from /root to /home/scott
+RUN cp -R /root/.julia /home/scott/.julia
 
 # Create a shared data volume
 # We need to create an empty file, otherwise the volume will
@@ -77,17 +77,17 @@ RUN cp -R /root/.julia /home/steve/.julia
 # This is probably a Docker bug.
 RUN mkdir /var/shared/
 RUN touch /var/shared/placeholder
-RUN chown -R steve:steve /var/shared
+RUN chown -R scott:scott /var/shared
 VOLUME /var/shared
 
-ENV PATH $PATH:/home/steve/.julia/v0.4/ProtoBuf/plugin
+ENV PATH $PATH:/home/scott/.julia/v0.4/ProtoBuf/plugin
 
-WORKDIR /home/steve
-ENV HOME /home/steve
-ADD bashrc /home/steve/.bashrc
+WORKDIR /home/scott
+ENV HOME /home/scott
+ADD bashrc /home/scott/.bashrc
 
 # Add the git bash prompt
-RUN git clone https://github.com/arialdomartini/oh-my-git.git /home/steve/.oh-my-git
+RUN git clone https://github.com/arialdomartini/oh-my-git.git /home/scott/.oh-my-git
 
 # Add python virtualenvwrapper
 RUN pip install virtualenvwrapper
@@ -95,27 +95,27 @@ RUN ln -s /usr/local/bin/virtualenvwrapper.sh /usr/bin/virtualenvwrapper.sh
 RUN bash -c "source /usr/local/bin/virtualenvwrapper.sh"
 
 # Link in shared parts of the home directory
-RUN ln -s /var/shared/.vimrc /home/steve/.vimrc
-RUN ln -s /var/shared/.vim /home/steve/.vim
-RUN ln -s /var/shared/.gitconfig /home/steve/.gitconfig
-RUN ln -s /var/shared/.ssh /home/steve/.ssh
-RUN ln -s /var/shared/.bash_history /home/steve/.bash_history
-RUN ln -s /var/shared/devel /home/steve/devel
+RUN ln -s /var/shared/.vimrc /home/scott/.vimrc
+RUN ln -s /var/shared/.vim /home/scott/.vim
+RUN ln -s /var/shared/.gitconfig /home/scott/.gitconfig
+RUN ln -s /var/shared/.ssh /home/scott/.ssh
+RUN ln -s /var/shared/.bash_history /home/scott/.bash_history
+RUN ln -s /var/shared/git /home/scott/git
 
 # Pretty bash prompt
-RUN echo 'export PS1="\[\033[36m\][\[\033[m\]\[\033[33m\]\u@\h\[\033[m\] \[\033[32m\]\W\[\033[m\]\[\033[36m\]]\[\033[m\] $ "' >> /home/steve/.bashrc
+RUN echo 'export PS1="\[\033[36m\][\[\033[m\]\[\033[33m\]\u@\h\[\033[m\] \[\033[32m\]\W\[\033[m\]\[\033[36m\]]\[\033[m\] $ "' >> /home/scott/.bashrc
 
 # Add in bash completion
 RUN echo '\
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then\n\
     . /etc/bash_completion\n\
 fi\n\
-' >> /home/steve/.bashrc
+' >> /home/scott/.bashrc
 
 RUN echo user_allow_other >> /etc/fuse.conf
 
-RUN chown -R steve: /home/steve
-USER steve
+RUN chown -R scott: /home/scott
+USER scott
 
 COPY ./docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
