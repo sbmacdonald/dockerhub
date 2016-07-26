@@ -1,5 +1,5 @@
 #!/bin/bash
 
 cp $HOME/.bashrc bashrc
-docker build --tag=sbchisholm/devbox .
+docker build --tag=sbmacdonald/devbox .
 rm bashrc
